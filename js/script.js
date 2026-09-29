@@ -1,32 +1,117 @@
 class Type {
-  
   constructor(data) {
     this.name = data.name;
     this.image = data.image;
+    this.color = this.getColorHexa();
+  }
+
+  getColorHexa() {
+    switch (this.name) {
+      case 'Eau':
+      case 'Water':
+        return '#2a75d3';
+      case 'Plante':
+      case 'Grass':
+        return '#3d7a6b';
+      case 'Poison':
+        return '#D850C2';
+      case 'Vol':
+      case 'Flying':
+        return '#738DDB';
+      case 'Feu':
+      case 'Fire':
+        return '#e66d00';
+      case 'Insecte':
+      case 'Bug':
+        return '#70B901';
+      case 'Électrik':
+      case 'Electric':
+        return '#FFD244';
+      case 'Sol':
+      case 'Ground':
+        return '#CD793F';
+      case 'Fée':
+      case 'Fairy':
+        return '#d96c9c';
+      case 'Combat':
+      case 'Fighting':
+        return '#a53329';
+      case 'Psy':
+      case 'Psychic':
+        return '#FD6960';
+      case 'Acier':
+      case 'Steel':
+        return '#246A79';
+      case 'Glace':
+      case 'Ice':
+        return '#67D1C8';
+      case 'Roche':
+      case 'Rock':
+        return '#CBB866';
+      case 'Dragon':
+        return '#1C6ABB';
+      case 'Ténèbres':
+      case 'Dark':
+        return '#544439';
+      case 'Normal':
+        return '#8b8b7a';
+      case 'Spectre':
+      case 'Ghost':
+        return '#605898';
+      default:
+        return '#808080';
+    }
   }
 }
 
 class Pokemon {
-  
   constructor(data) {
     this.id = data.id || data.pokedexId;
     this.image = data.image;
     this.name = data.name;
-    this.apiTypes = Array.isArray(data.apiTypes)
-      ? data.apiTypes.map((t) => (t instanceof Type ? t : new Type(t)))
+    this.arrTypes = Array.isArray(data.apiTypes || data.arrTypes)
+      ? (data.apiTypes || data.arrTypes).map((t) => (t instanceof Type ? t : new Type(t)))
       : [];
+    this.apiTypes = this.arrTypes;
     this.attack = data.stats ? data.stats.attack : data.attack;
     this.defense = data.stats ? data.stats.defense : data.defense;
     this.special_attack = data.stats ? data.stats.special_attack : data.special_attack;
     this.speed = data.stats ? data.stats.speed : data.speed;
-
     this.HP = data.stats ? data.stats.HP : (data.HP || 0);
+  }
+
+  displayCard() {
+    const article = document.createElement('article');
+    const primaryType = this.arrTypes[0];
+    const color = primaryType ? primaryType.color : '#808080';
+
+    article.style.borderColor = color;
+    article.style.backgroundColor = color;
+
+    article.innerHTML = `
+      <figure>
+        <picture>
+          <img src="${this.image}" alt="Image ${this.name}" loading="lazy" />
+        </picture>
+        <figcaption>
+          <span class="types" style="background-color: ${color};">${primaryType ? primaryType.name : ''}</span>
+          <h2>${this.name}</h2>
+          <ol>
+            <li>Points de vie : ${this.HP}</li>
+            <li>Attaque : ${this.attack}</li>
+            <li>Défense : ${this.defense}</li>
+            <li>Attaque spécial : ${this.special_attack}</li>
+            <li>Vitesse : ${this.speed}</li>
+          </ol>
+        </figcaption>
+      </figure>
+    `;
+
+    return article;
   }
 }
 
 export { Pokemon, Type };
-
-
 
 const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
 
@@ -73,8 +158,7 @@ const TYPE_ICONS = {
   ténèbres: 'https://raw.githubusercontent.com/msikma/pokesprite/master/misc/types/gen8/dark.png'
 };
 
-
-let currentPokemons = [];       
+let currentPokemons = [];
 let selectedTypeFilter = null;
 let selectedSortCriteria = 'id';
 let frenchNamesCache = {};
@@ -83,89 +167,6 @@ const mainContainer = document.querySelector('main');
 const generationSelect = document.getElementById('generation-select');
 const sortSelect = document.getElementById('sort-select');
 const typesContainer = document.getElementById('types');
-
-
-function getTypeColors(type) {
-  const normalizedType = (type || '').trim().toLowerCase();
-
-  switch (normalizedType) {
-    case 'plante':
-    case 'grass':
-      return { border: '#3d7a6b', background: '#3d7a6bb3', badge: '#2d5a4e' };
-
-    case 'feu':
-    case 'fire':
-      return { border: '#e66d00', background: '#e66d00b3', badge: '#b34700' };
-
-    case 'eau':
-    case 'water':
-      return { border: '#2a75d3', background: '#2a75d3b3', badge: '#185499' };
-
-    case 'poison':
-      return { border: '#8a448d', background: '#8a448db3', badge: '#5e2b60' };
-
-    case 'insecte':
-    case 'bug':
-      return { border: '#889e27', background: '#889e27b3', badge: '#5e6d19' };
-
-    case 'vol':
-    case 'flying':
-      return { border: '#7da4e8', background: '#7da4e8b3', badge: '#4a7bc9' };
-
-    case 'normal':
-      return { border: '#8b8b7a', background: '#8b8b7ab3', badge: '#616155' };
-
-    case 'électrik':
-    case 'electrik':
-    case 'electric':
-      return { border: '#e5b700', background: '#e5b700b3', badge: '#a88600' };
-
-    case 'sol':
-    case 'ground':
-      return { border: '#b58b47', background: '#b58b47b3', badge: '#82602a' };
-
-    case 'fée':
-    case 'fee':
-    case 'fairy':
-      return { border: '#d96c9c', background: '#d96c9cb3', badge: '#9e466e' };
-
-    case 'combat':
-    case 'fighting':
-      return { border: '#a53329', background: '#a53329b3', badge: '#701e17' };
-
-    case 'psy':
-    case 'psychic':
-      return { border: '#db3f6b', background: '#db3f6bb3', badge: '#962343' };
-
-    case 'roche':
-    case 'rock':
-      return { border: '#9e8c45', background: '#9e8c45b3', badge: '#695c2b' };
-
-    case 'spectre':
-    case 'ghost':
-      return { border: '#605898', background: '#605898b3', badge: '#3f386b' };
-
-    case 'glace':
-    case 'ice':
-      return { border: '#5cb8b2', background: '#5cb8b2b3', badge: '#37827d' };
-
-    case 'dragon':
-      return { border: '#5b38d6', background: '#5b38d6b3', badge: '#391d9c' };
-
-    case 'acier':
-    case 'steel':
-      return { border: '#8f9bb3', background: '#8f9bb3b3', badge: '#5c697e' };
-
-    case 'ténèbres':
-    case 'tenebres':
-    case 'dark':
-      return { border: '#544439', background: '#544439b3', badge: '#33271f' };
-
-    default:
-      return { border: 'grey', background: 'grey', badge: '#000000' };
-  }
-}
-
 
 async function initFrenchNamesDictionary() {
   try {
@@ -178,38 +179,6 @@ async function initFrenchNamesDictionary() {
   }
 }
 
-
-
-function createPokemonArticle(pokemon) {
-  const article = document.createElement('article');
-  const primaryTypeName = pokemon.apiTypes[0]?.name || 'Normal';
-
-  const colors = getTypeColors(primaryTypeName);
-  article.style.borderColor = colors.border;
-  article.style.backgroundColor = colors.background;
-
-  article.innerHTML = `
-    <figure>
-      <picture>
-        <img src="${pokemon.image}" alt="Image ${pokemon.name}" loading="lazy" />
-      </picture>
-      <figcaption>
-        <span class="types" style="background-color: ${colors.badge};">${primaryTypeName}</span>
-        <h2>${pokemon.name}</h2>
-        <ol>
-          <li>Points de vie : ${pokemon.HP}</li>
-          <li>Attaque : ${pokemon.attack}</li>
-          <li>Défense : ${pokemon.defense}</li>
-          <li>Attaque spécial : ${pokemon.special_attack}</li>
-          <li>Vitesse : ${pokemon.speed}</li>
-        </ol>
-      </figcaption>
-    </figure>
-  `;
-
-  return article;
-}
-
 function renderPokemons(pokemonsList) {
   mainContainer.innerHTML = '';
 
@@ -219,18 +188,17 @@ function renderPokemons(pokemonsList) {
   }
 
   pokemonsList.forEach((pokemon) => {
-    const article = createPokemonArticle(pokemon);
+    const article = pokemon.displayCard();
     mainContainer.appendChild(article);
   });
 }
-
 
 function applyFilterAndSort() {
   let result = [...currentPokemons];
 
   if (selectedTypeFilter) {
     result = result.filter((pokemon) =>
-      pokemon.apiTypes.some(
+      pokemon.arrTypes.some(
         (t) => t.name.toLowerCase() === selectedTypeFilter.toLowerCase()
       )
     );
@@ -245,8 +213,8 @@ function applyFilterAndSort() {
       case 'attack':
         return b.attack - a.attack;
       case 'type':
-        const typeA = a.apiTypes[0]?.name || '';
-        const typeB = b.apiTypes[0]?.name || '';
+        const typeA = a.arrTypes[0]?.name || '';
+        const typeB = b.arrTypes[0]?.name || '';
         return typeA.localeCompare(typeB, 'fr');
       case 'id':
       default:
@@ -262,7 +230,7 @@ function renderTypeFilterButtons(pokemonsList) {
 
   const presentTypesMap = new Map();
   pokemonsList.forEach((pokemon) => {
-    pokemon.apiTypes.forEach((t) => {
+    pokemon.arrTypes.forEach((t) => {
       if (!presentTypesMap.has(t.name)) {
         presentTypesMap.set(t.name, t.image);
       }
@@ -315,7 +283,6 @@ function updateActiveTypeButton(activeButton) {
   }
 }
 
-
 async function loadData(generationNumber = 1) {
   console.log(`loadData(${generationNumber}) déclenché.`);
   mainContainer.innerHTML = '<p class="status-message">Chargement des Pokémon en cours...</p>';
@@ -365,7 +332,7 @@ async function loadData(generationNumber = 1) {
           id: details.id,
           name: frenchName,
           image: image,
-          apiTypes: apiTypes,
+          arrTypes: apiTypes,
           stats: {
             HP: statsMap['hp'] || 0,
             attack: statsMap['attack'] || 0,
@@ -419,7 +386,6 @@ async function loadLocalFallbackData() {
     mainContainer.innerHTML = '<p class="status-message">Erreur lors du chargement des données locales.</p>';
   }
 }
-
 
 generationSelect.addEventListener('change', (event) => {
   const chosenGeneration = event.target.value;
