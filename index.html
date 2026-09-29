@@ -4,85 +4,48 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Poke API</title>
+    <title>PokéAPI - Pokedex</title>
     <link rel="stylesheet" href="./css/normalize.css" />
     <link rel="stylesheet" href="./css/style.css" />
     <script src="./js/script.js" defer type="module"></script>
   </head>
   <body>
-    <main>
-      <article>
-        <figure>
-          <picture>
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png" alt="Image Bulbizarre" />
-          </picture>
-          <figcaption>
-            <span class="types">Plante</span>
-            <h2>Bulbizarre</h2>
-            <ol>
-              <li>Points de vie : 39</li>
-              <li>Attaque : 52</li>
-              <li>Défense : 43</li>
-              <li>Attaque spécial : 60</li>
-              <li>Vitesse : 65</li>
-            </ol>
-          </figcaption>
-        </figure>
-      </article>
-      <article>
-        <figure>
-          <picture>
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png" alt="Image Bulbizarre" />
-          </picture>
-          <figcaption>
-            <span class="types">Plante</span>
-            <h2>Bulbizarre</h2>
-            <ol>
-              <li>Points de vie : 39</li>
-              <li>Attaque : 52</li>
-              <li>Défense : 43</li>
-              <li>Attaque spécial : 60</li>
-              <li>Vitesse : 65</li>
-            </ol>
-          </figcaption>
-        </figure>
-      </article>
-      <article>
-        <figure>
-          <picture>
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png" alt="Image Bulbizarre" />
-          </picture>
-          <figcaption>
-            <span class="types">Plante</span>
-            <h2>Bulbizarre</h2>
-            <ol>
-              <li>Points de vie : 39</li>
-              <li>Attaque : 52</li>
-              <li>Défense : 43</li>
-              <li>Attaque spécial : 60</li>
-              <li>Vitesse : 65</li>
-            </ol>
-          </figcaption>
-        </figure>
-      </article>
-      <article>
-        <figure>
-          <picture>
-            <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png" alt="Image Bulbizarre" />
-          </picture>
-          <figcaption>
-            <span class="types">Plante</span>
-            <h2>Bulbizarre</h2>
-            <ol>
-              <li>Points de vie : 39</li>
-              <li>Attaque : 52</li>
-              <li>Défense : 43</li>
-              <li>Attaque spécial : 60</li>
-              <li>Vitesse : 65</li>
-            </ol>
-          </figcaption>
-        </figure>
-      </article>
-    </main>
+    <h1>Pokédex Interactif</h1>
+
+    <h2>Sélectionner la génération de Pokémon :</h2>
+    <section id="filtre">
+      <div class="filter-group">
+        <label for="generation-select">Génération :</label>
+        <div class="select">
+          <select id="generation-select">
+            <option value="1">Génération 1</option>
+            <option value="2">Génération 2</option>
+            <option value="3">Génération 3</option>
+            <option value="4">Génération 4</option>
+            <option value="5">Génération 5</option>
+            <option value="6">Génération 6</option>
+            <option value="7">Génération 7</option>
+            <option value="8">Génération 8</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="sort-select">Trier par :</label>
+        <div class="select">
+          <select id="sort-select">
+            <option value="id">Numéro Pokédex</option>
+            <option value="name">Nom</option>
+            <option value="hp">Points de vie</option>
+            <option value="attack">Attaque</option>
+            <option value="type">Type</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <div id="types"></div>
+
+    <main></main>
   </body>
 </html>
