@@ -1,0 +1,17 @@
+{
+  "name": "pokeapi",
+  "version": "1.0.0",
+  "description": "Template HTML, CSS & JS",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "author": "Antoine DC",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^8.3.0"
+  }
+}
