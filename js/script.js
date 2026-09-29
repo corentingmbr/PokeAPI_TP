@@ -1,5 +1,34 @@
-const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
+class Type {
+  
+  constructor(data) {
+    this.name = data.name;
+    this.image = data.image;
+  }
+}
 
+class Pokemon {
+  
+  constructor(data) {
+    this.id = data.id || data.pokedexId;
+    this.image = data.image;
+    this.name = data.name;
+    this.apiTypes = Array.isArray(data.apiTypes)
+      ? data.apiTypes.map((t) => (t instanceof Type ? t : new Type(t)))
+      : [];
+    this.attack = data.stats ? data.stats.attack : data.attack;
+    this.defense = data.stats ? data.stats.defense : data.defense;
+    this.special_attack = data.stats ? data.stats.special_attack : data.special_attack;
+    this.speed = data.stats ? data.stats.speed : data.speed;
+
+    this.HP = data.stats ? data.stats.HP : (data.HP || 0);
+  }
+}
+
+export { Pokemon, Type };
+
+
+
+const POKEAPI_BASE_URL = 'https://pokeapi.co/api/v2';
 
 const TYPE_TRANSLATIONS = {
   normal: 'Normal',
@@ -23,7 +52,6 @@ const TYPE_TRANSLATIONS = {
   stellar: 'Stellaire'
 };
 
-
 const TYPE_ICONS = {
   plante: 'https://raw.githubusercontent.com/msikma/pokesprite/master/misc/types/gen8/grass.png',
   feu: 'https://raw.githubusercontent.com/msikma/pokesprite/master/misc/types/gen8/fire.png',
@@ -46,21 +74,15 @@ const TYPE_ICONS = {
 };
 
 
-
-
 let currentPokemons = [];       
-let selectedTypeFilter = null;   
-let selectedSortCriteria = 'id'; 
-let frenchNamesCache = {};       
-
+let selectedTypeFilter = null;
+let selectedSortCriteria = 'id';
+let frenchNamesCache = {};
 
 const mainContainer = document.querySelector('main');
 const generationSelect = document.getElementById('generation-select');
 const sortSelect = document.getElementById('sort-select');
 const typesContainer = document.getElementById('types');
-
-
-
 
 
 function getTypeColors(type) {
@@ -69,158 +91,80 @@ function getTypeColors(type) {
   switch (normalizedType) {
     case 'plante':
     case 'grass':
-      return {
-        border: '#3d7a6b',
-        background: '#3d7a6bb3',
-        badge: '#2d5a4e'
-      };
+      return { border: '#3d7a6b', background: '#3d7a6bb3', badge: '#2d5a4e' };
 
     case 'feu':
     case 'fire':
-      return {
-        border: '#e66d00',
-        background: '#e66d00b3',
-        badge: '#b34700'
-      };
+      return { border: '#e66d00', background: '#e66d00b3', badge: '#b34700' };
 
     case 'eau':
     case 'water':
-      return {
-        border: '#2a75d3',
-        background: '#2a75d3b3',
-        badge: '#185499'
-      };
+      return { border: '#2a75d3', background: '#2a75d3b3', badge: '#185499' };
 
     case 'poison':
-      return {
-        border: '#8a448d',
-        background: '#8a448db3',
-        badge: '#5e2b60'
-      };
+      return { border: '#8a448d', background: '#8a448db3', badge: '#5e2b60' };
 
     case 'insecte':
     case 'bug':
-      return {
-        border: '#889e27',
-        background: '#889e27b3',
-        badge: '#5e6d19'
-      };
+      return { border: '#889e27', background: '#889e27b3', badge: '#5e6d19' };
 
     case 'vol':
     case 'flying':
-      return {
-        border: '#7da4e8',
-        background: '#7da4e8b3',
-        badge: '#4a7bc9'
-      };
+      return { border: '#7da4e8', background: '#7da4e8b3', badge: '#4a7bc9' };
 
     case 'normal':
-      return {
-        border: '#8b8b7a',
-        background: '#8b8b7ab3',
-        badge: '#616155'
-      };
+      return { border: '#8b8b7a', background: '#8b8b7ab3', badge: '#616155' };
 
     case 'électrik':
     case 'electrik':
     case 'electric':
-      return {
-        border: '#e5b700',
-        background: '#e5b700b3',
-        badge: '#a88600'
-      };
+      return { border: '#e5b700', background: '#e5b700b3', badge: '#a88600' };
 
     case 'sol':
     case 'ground':
-      return {
-        border: '#b58b47',
-        background: '#b58b47b3',
-        badge: '#82602a'
-      };
+      return { border: '#b58b47', background: '#b58b47b3', badge: '#82602a' };
 
     case 'fée':
     case 'fee':
     case 'fairy':
-      return {
-        border: '#d96c9c',
-        background: '#d96c9cb3',
-        badge: '#9e466e'
-      };
+      return { border: '#d96c9c', background: '#d96c9cb3', badge: '#9e466e' };
 
     case 'combat':
     case 'fighting':
-      return {
-        border: '#a53329',
-        background: '#a53329b3',
-        badge: '#701e17'
-      };
+      return { border: '#a53329', background: '#a53329b3', badge: '#701e17' };
 
     case 'psy':
     case 'psychic':
-      return {
-        border: '#db3f6b',
-        background: '#db3f6bb3',
-        badge: '#962343'
-      };
+      return { border: '#db3f6b', background: '#db3f6bb3', badge: '#962343' };
 
     case 'roche':
     case 'rock':
-      return {
-        border: '#9e8c45',
-        background: '#9e8c45b3',
-        badge: '#695c2b'
-      };
+      return { border: '#9e8c45', background: '#9e8c45b3', badge: '#695c2b' };
 
     case 'spectre':
     case 'ghost':
-      return {
-        border: '#605898',
-        background: '#605898b3',
-        badge: '#3f386b'
-      };
+      return { border: '#605898', background: '#605898b3', badge: '#3f386b' };
 
     case 'glace':
     case 'ice':
-      return {
-        border: '#5cb8b2',
-        background: '#5cb8b2b3',
-        badge: '#37827d'
-      };
+      return { border: '#5cb8b2', background: '#5cb8b2b3', badge: '#37827d' };
 
     case 'dragon':
-      return {
-        border: '#5b38d6',
-        background: '#5b38d6b3',
-        badge: '#391d9c'
-      };
+      return { border: '#5b38d6', background: '#5b38d6b3', badge: '#391d9c' };
 
     case 'acier':
     case 'steel':
-      return {
-        border: '#8f9bb3',
-        background: '#8f9bb3b3',
-        badge: '#5c697e'
-      };
+      return { border: '#8f9bb3', background: '#8f9bb3b3', badge: '#5c697e' };
 
     case 'ténèbres':
     case 'tenebres':
     case 'dark':
-      return {
-        border: '#544439',
-        background: '#544439b3',
-        badge: '#33271f'
-      };
+      return { border: '#544439', background: '#544439b3', badge: '#33271f' };
 
     default:
-      return {
-        border: 'grey',
-        background: 'grey',
-        badge: '#000000'
-      };
+      return { border: 'grey', background: 'grey', badge: '#000000' };
   }
 }
-
-
 
 
 async function initFrenchNamesDictionary() {
@@ -230,38 +174,34 @@ async function initFrenchNamesDictionary() {
       frenchNamesCache = await response.json();
     }
   } catch (error) {
-    console.warn('Impossible de charger le dictionnaire names_fr.json en local :', error);
+    console.warn('Dictionnaire local names_fr.json indisponible :', error);
   }
 }
 
 
 
-
-
 function createPokemonArticle(pokemon) {
-  
   const article = document.createElement('article');
+  const primaryTypeName = pokemon.apiTypes[0]?.name || 'Normal';
 
-  
-  const colors = getTypeColors(pokemon.primaryType);
+  const colors = getTypeColors(primaryTypeName);
   article.style.borderColor = colors.border;
   article.style.backgroundColor = colors.background;
 
-  
   article.innerHTML = `
     <figure>
       <picture>
         <img src="${pokemon.image}" alt="Image ${pokemon.name}" loading="lazy" />
       </picture>
       <figcaption>
-        <span class="types" style="background-color: ${colors.badge};">${pokemon.primaryType}</span>
+        <span class="types" style="background-color: ${colors.badge};">${primaryTypeName}</span>
         <h2>${pokemon.name}</h2>
         <ol>
-          <li>Points de vie : ${pokemon.stats.hp}</li>
-          <li>Attaque : ${pokemon.stats.attack}</li>
-          <li>Défense : ${pokemon.stats.defense}</li>
-          <li>Attaque spécial : ${pokemon.stats.specialAttack}</li>
-          <li>Vitesse : ${pokemon.stats.speed}</li>
+          <li>Points de vie : ${pokemon.HP}</li>
+          <li>Attaque : ${pokemon.attack}</li>
+          <li>Défense : ${pokemon.defense}</li>
+          <li>Attaque spécial : ${pokemon.special_attack}</li>
+          <li>Vitesse : ${pokemon.speed}</li>
         </ol>
       </figcaption>
     </figure>
@@ -270,9 +210,7 @@ function createPokemonArticle(pokemon) {
   return article;
 }
 
-
 function renderPokemons(pokemonsList) {
-  
   mainContainer.innerHTML = '';
 
   if (!pokemonsList || pokemonsList.length === 0) {
@@ -280,7 +218,6 @@ function renderPokemons(pokemonsList) {
     return;
   }
 
-  
   pokemonsList.forEach((pokemon) => {
     const article = createPokemonArticle(pokemon);
     mainContainer.appendChild(article);
@@ -288,68 +225,53 @@ function renderPokemons(pokemonsList) {
 }
 
 
-
-
-
-
 function applyFilterAndSort() {
-  
   let result = [...currentPokemons];
 
   if (selectedTypeFilter) {
     result = result.filter((pokemon) =>
-      pokemon.types.some(
-        (type) => type.toLowerCase() === selectedTypeFilter.toLowerCase()
+      pokemon.apiTypes.some(
+        (t) => t.name.toLowerCase() === selectedTypeFilter.toLowerCase()
       )
     );
   }
 
-  
   result.sort((a, b) => {
     switch (selectedSortCriteria) {
       case 'name':
-        
         return a.name.localeCompare(b.name, 'fr');
-
       case 'hp':
-        
-        return b.stats.hp - a.stats.hp;
-
+        return b.HP - a.HP;
       case 'attack':
-        
-        return b.stats.attack - a.stats.attack;
-
+        return b.attack - a.attack;
       case 'type':
-        
-        return a.primaryType.localeCompare(b.primaryType, 'fr');
-
+        const typeA = a.apiTypes[0]?.name || '';
+        const typeB = b.apiTypes[0]?.name || '';
+        return typeA.localeCompare(typeB, 'fr');
       case 'id':
       default:
-        
         return a.id - b.id;
     }
   });
 
-  
   renderPokemons(result);
 }
-
 
 function renderTypeFilterButtons(pokemonsList) {
   typesContainer.innerHTML = '';
 
-  
-  const presentTypes = new Set();
+  const presentTypesMap = new Map();
   pokemonsList.forEach((pokemon) => {
-    pokemon.types.forEach((type) => presentTypes.add(type));
+    pokemon.apiTypes.forEach((t) => {
+      if (!presentTypesMap.has(t.name)) {
+        presentTypesMap.set(t.name, t.image);
+      }
+    });
   });
 
-  
   const allButton = document.createElement('div');
   allButton.className = !selectedTypeFilter ? 'active' : '';
-  allButton.innerHTML = `
-    <p style="font-size: 0.9rem; margin: auto;">Tous</p>
-  `;
+  allButton.innerHTML = `<p style="font-size: 0.9rem; margin: auto;">Tous</p>`;
   allButton.addEventListener('click', () => {
     selectedTypeFilter = null;
     updateActiveTypeButton(allButton);
@@ -357,10 +279,9 @@ function renderTypeFilterButtons(pokemonsList) {
   });
   typesContainer.appendChild(allButton);
 
-  
-  Array.from(presentTypes).sort().forEach((typeName) => {
+  Array.from(presentTypesMap.keys()).sort().forEach((typeName) => {
     const typeKey = typeName.toLowerCase();
-    const iconUrl = TYPE_ICONS[typeKey] || 'https://raw.githubusercontent.com/msikma/pokesprite/master/misc/types/gen8/normal.png';
+    const iconUrl = presentTypesMap.get(typeName) || TYPE_ICONS[typeKey] || 'https://raw.githubusercontent.com/msikma/pokesprite/master/misc/types/gen8/normal.png';
 
     const typeDiv = document.createElement('div');
     if (selectedTypeFilter && selectedTypeFilter.toLowerCase() === typeKey) {
@@ -373,7 +294,6 @@ function renderTypeFilterButtons(pokemonsList) {
     `;
 
     typeDiv.addEventListener('click', () => {
-      
       if (selectedTypeFilter === typeName) {
         selectedTypeFilter = null;
       } else {
@@ -387,7 +307,6 @@ function renderTypeFilterButtons(pokemonsList) {
   });
 }
 
-
 function updateActiveTypeButton(activeButton) {
   const buttons = typesContainer.querySelectorAll('div');
   buttons.forEach((btn) => btn.classList.remove('active'));
@@ -397,16 +316,11 @@ function updateActiveTypeButton(activeButton) {
 }
 
 
-
-
-
-
-async function loadData(generationNumber) {
+async function loadData(generationNumber = 1) {
   console.log(`loadData(${generationNumber}) déclenché.`);
   mainContainer.innerHTML = '<p class="status-message">Chargement des Pokémon en cours...</p>';
 
   try {
-    
     const genResponse = await fetch(`${POKEAPI_BASE_URL}/generation/${generationNumber}`);
     if (!genResponse.ok) {
       throw new Error(`Erreur HTTP lors de la récupération de la génération ${generationNumber}`);
@@ -414,7 +328,6 @@ async function loadData(generationNumber) {
 
     const genData = await genResponse.json();
 
-    
     const pokemonSpeciesList = genData.pokemon_species || [];
     const pokemonIds = pokemonSpeciesList
       .map((species) => {
@@ -423,48 +336,44 @@ async function loadData(generationNumber) {
       })
       .sort((a, b) => a - b);
 
-    
     const fetchPromises = pokemonIds.map(async (id) => {
       try {
         const res = await fetch(`${POKEAPI_BASE_URL}/pokemon/${id}`);
         if (!res.ok) return null;
         const details = await res.json();
 
-        
         const frenchName = frenchNamesCache[id] || details.name;
 
-        
-        const types = details.types.map((t) => {
+        const apiTypes = details.types.map((t) => {
           const typeEn = t.type.name;
-          return TYPE_TRANSLATIONS[typeEn] || typeEn;
+          const typeFr = TYPE_TRANSLATIONS[typeEn] || typeEn;
+          const typeIcon = TYPE_ICONS[typeFr.toLowerCase()] || `https://raw.githubusercontent.com/msikma/pokesprite/master/misc/types/gen8/${typeEn}.png`;
+          return new Type({ name: typeFr, image: typeIcon });
         });
 
-        
         const statsMap = {};
         details.stats.forEach((s) => {
           statsMap[s.stat.name] = s.base_stat;
         });
 
-        
         const image =
           details.sprites?.other?.['official-artwork']?.front_default ||
           details.sprites?.front_default ||
           `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 
-        return {
+        return new Pokemon({
           id: details.id,
           name: frenchName,
           image: image,
-          types: types,
-          primaryType: types[0] || 'Normal',
+          apiTypes: apiTypes,
           stats: {
-            hp: statsMap['hp'] || 0,
+            HP: statsMap['hp'] || 0,
             attack: statsMap['attack'] || 0,
             defense: statsMap['defense'] || 0,
-            specialAttack: statsMap['special-attack'] || 0,
+            special_attack: statsMap['special-attack'] || 0,
             speed: statsMap['speed'] || 0
           }
-        };
+        });
       } catch (err) {
         console.error(`Erreur pour le Pokémon #${id} :`, err);
         return null;
@@ -474,51 +383,33 @@ async function loadData(generationNumber) {
     const results = await Promise.all(fetchPromises);
     currentPokemons = results.filter(Boolean);
 
-    
     selectedTypeFilter = null;
     renderTypeFilterButtons(currentPokemons);
     applyFilterAndSort();
 
-    console.log(`Génération ${generationNumber} chargée avec succès :`, currentPokemons.length, 'Pokémon.');
+    console.log(`Génération ${generationNumber} : ${currentPokemons.length} instances de Pokemon créées.`);
   } catch (error) {
-    console.error(`Erreur réseau/API sur loadData(${generationNumber}) :`, error);
+    console.error(`Erreur réseau/API :`, error);
 
-    
     if (String(generationNumber) === '1') {
       console.warn('Basculement sur data.json local...');
       await loadLocalFallbackData();
     } else {
       mainContainer.innerHTML = `
         <p class="status-message" style="color: #ff6b6b;">
-          Impossible de contacter PokéAPI pour la génération ${generationNumber}.
-          Vérifiez votre connexion internet.
+          Impossible de contacter l'API pour la génération ${generationNumber}.
         </p>
       `;
     }
   }
 }
 
-
 async function loadLocalFallbackData() {
   try {
     const response = await fetch('./data/data.json');
     const localData = await response.json();
-    console.log('Données chargées depuis data.json (TP 18) :', localData);
 
-    currentPokemons = localData.map((item) => ({
-      id: item.pokedexId,
-      name: item.name,
-      image: item.image,
-      types: item.apiTypes.map((t) => t.name),
-      primaryType: item.apiTypes[0]?.name || 'Normal',
-      stats: {
-        hp: item.stats.HP,
-        attack: item.stats.attack,
-        defense: item.stats.defense,
-        specialAttack: item.stats.special_attack,
-        speed: item.stats.speed
-      }
-    }));
+    currentPokemons = localData.map((item) => new Pokemon(item));
 
     selectedTypeFilter = null;
     renderTypeFilterButtons(currentPokemons);
@@ -530,31 +421,21 @@ async function loadLocalFallbackData() {
 }
 
 
-
-
-
-
 generationSelect.addEventListener('change', (event) => {
   const chosenGeneration = event.target.value;
-  console.log(`Génération sélectionnée (event change) : ${chosenGeneration}`);
+  console.log(`Génération sélectionnée : ${chosenGeneration}`);
   loadData(chosenGeneration);
 });
 
-
 sortSelect.addEventListener('change', (event) => {
   selectedSortCriteria = event.target.value;
-  console.log(`Critère de tri sélectionné : ${selectedSortCriteria}`);
+  console.log(`Critère de tri : ${selectedSortCriteria}`);
   applyFilterAndSort();
 });
 
-
 async function initApp() {
-  
   await initFrenchNamesDictionary();
-
-  
   loadData(1);
 }
-
 
 initApp();
